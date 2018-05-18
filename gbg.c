@@ -33,18 +33,30 @@ void get_stackframe() {
     }
 }
 
-void* my_malloc()
+int long_comp(void* a, void* b) {
+    return *(long*)a - *(long*)b;
+}
 
+void* my_malloc(void* value, hashmap* heap_contents) {
+
+    if (heap_contents == NULL || value == NULL) {
+        return NULL;
+    }
+
+    void* mallocd = malloc(sizeof(*value));
+
+    long* address = mallocd;
+
+    put(heap_contents, address, mallocd, &long_comp, NULL);
+
+    return mallocd;
+}
 
 int main() {
     
-    long x = 5;
-    long y = 6;
-    long z = 7;
+    
 
-    long* p = &x;
 
-    get_stackframe();
-
+    
     return 0;
 }

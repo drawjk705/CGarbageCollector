@@ -14,7 +14,7 @@ hmnode* create_node(void* key, void* value) {
 
 void destroy_node(hmnode* n, int free_val) {
 	if (free_val) {
-		free(n->key);
+        free(n->key);
 		free(n->value);
 	}
 	free(n);
@@ -27,7 +27,7 @@ linkedlist* create_ll() {
 
 void add_to_head(linkedlist* ll, void* key, void* value) {
 
-        if (ll == NULL || key == NULL || value == NULL) {
+        if (ll == NULL || value == NULL) {
               return;
         }
         hmnode* n = create_node(key, value);
@@ -39,7 +39,7 @@ void add_to_head(linkedlist* ll, void* key, void* value) {
 
 void add_to_tail(linkedlist* ll, void* key, void* value) {
 	
-	if (ll == NULL || key == NULL || value == NULL) {
+	if (ll == NULL || value == NULL) {
 		return;
 	}
 
@@ -57,14 +57,14 @@ void add_to_tail(linkedlist* ll, void* key, void* value) {
 
 int contains(linkedlist* ll, void* key, int (*compare)(void*, void*)) {
 
-	if (ll == NULL || key == NULL) {
+	if (ll == NULL) {
 		return 0;
 	}
 
 	hmnode* trav = ll->head;
 
 	while (trav != NULL) {
-		if (compare(trav->key, key)) {
+		if (compare(&(trav->key), &key)) {
 			return 1;
 		}
 		trav = trav->next;
@@ -75,7 +75,7 @@ int contains(linkedlist* ll, void* key, int (*compare)(void*, void*)) {
 
 void ll_remove(linkedlist* ll, void* key, int (*compare)(void*, void*)) {
 
-	if (ll == NULL || key == NULL) {
+	if (ll == NULL) {
 		return;
 	}
 
@@ -83,7 +83,7 @@ void ll_remove(linkedlist* ll, void* key, int (*compare)(void*, void*)) {
 	hmnode* prev;
 
 	while (trav != NULL) {
-		if (compare(trav->key, key)) {
+		if (compare(&(trav->key), &key)) {
 			if (trav == ll->head) {
 				ll->head = trav->next;
 			} else {
