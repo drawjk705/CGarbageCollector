@@ -3,11 +3,14 @@
 #include <stdint.h>
 #include "hashmap.h"
 
+hashmap* heap_contents;
 
+void init();
 
 void get_stackframe();
 
-void* my_malloc(void* value, hashmap* heap_contents);
+void* my_malloc(void* value);
 
-int long_comp(void* a, void* b);
+int addr_comp(void* a, void* b);
 
+void collect_garbage();

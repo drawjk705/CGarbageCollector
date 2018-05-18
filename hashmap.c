@@ -26,37 +26,56 @@ hashmap* create_hashmap() {
     return hm;
 }
 
+void destroy_hashmap(hashmap* hm) {
+
+    int cap = hm->capacity;
+
+    for (int i = 0; i < cap; i++) {
+
+        destroy_list(hm->buckets[i], 1);
+
+    }
+
+    free(hm->buckets);
+
+    free(hm);
+
+}
+
 void put(hashmap* hm, void* key, void* value, int (*compare)(void*, void*), int (*hash)(void*)) {
     
     if ((double) hm->size / (double) hm->capacity > LOAD_FACTOR) {
         expand_hm(hm, hash);
     }
 
-    int hashcode;
+    long hashcode;
 
     if (hash == NULL) {
         char addr[10];
         sprintf(addr, "%p",key);
-        hashcode = hex_to_int(addr);
+        hashcode = hex_to_long(addr);
     } else {
         hashcode = hash(key);
     }
 
     int bucket = hashcode % hm->capacity;
 
+    // creating new kvp
     if (!contains(hm->buckets[bucket], key, compare)) {
         add_to_tail(hm->buckets[bucket], key, value);
-        hm->size++;
-    } else {
-	hmnode* trav = hm->buckets[bucket]->head;
-	while (trav != NULL) {
-		if (compare(trav->key, key)) {
-			free(trav->value);
-			trav->value = value;
-			return;
-		}
-		trav = trav->next;
-	}
+        hm->size += 1;
+    }
+    // updating kvp
+    else {
+    	hmnode* trav = hm->buckets[bucket]->head;
+    	while (trav != NULL) {
+    		if (compare(trav->key, key) == 0) {
+                free(trav->value);
+    			trav->value = value;
+    			return;
+    		}
+    		trav = trav->next;
+    	}
     }
 }
 
@@ -66,7 +85,7 @@ void remove_from_hm(hashmap* hm, void* key, int (*compare)(void*, void*), int (*
     if (hash == NULL) {
         char addr[10];
         sprintf(addr, "%p",key);
-        hashcode = hex_to_int(addr);
+        hashcode = hex_to_long(addr);
     } else {
         hashcode = hash(key);
     }
@@ -85,7 +104,7 @@ int contains_key(hashmap* hm, void* key, int (*compare)(void*, void*), int (*has
     if (hash == NULL) {
         char addr[10];
         sprintf(addr, "%p",key);
-        hashcode = hex_to_int(addr);
+        hashcode = hex_to_long(addr);
     } else {
         hashcode = hash(key);
     }
@@ -120,12 +139,12 @@ int expand_hm(hashmap* hm, int (*hash)(void*)) {
             if (hash == NULL) {
                 char addr[10];
                 sprintf(addr, "%p", trav->key);
-                hashcode = hex_to_int(addr);
+                hashcode = hex_to_long(addr);
             } else {
                 hashcode = hash(trav->key);
             }
             int bucket = hashcode % new_cap;
-            add_to_tail(new_buckets[i], trav->key, trav->value);
+            add_to_tail(new_buckets[bucket], trav->key, trav->value);
             trav = trav->next;
         }
         destroy_list(hm->buckets[i], 0);
@@ -136,15 +155,19 @@ int expand_hm(hashmap* hm, int (*hash)(void*)) {
     return 1;
 }
 
-int hex_to_int(char* num) {
+int hex_to_long(char* num) {
 
     int len = strlen(num);
     
-    int result = 0;
+    long result = 0;
     int shift = 0;
-    for (int i = len - 1; i > 1; i--) {
+    for (int i = len - 1; i >= 0; i--) {
+
         int temp;
         char c = num[i];
+        if (c == 'x') {
+            break;
+        }
         switch (c) {
             case 'a':
                 temp = 10;
@@ -186,7 +209,7 @@ void* get_from_hm(hashmap* hm, void* key, int (*compare)(void*, void*), int (*ha
 	if (hash == NULL) {
 		char addr[20];
 		sprintf(addr, "%p", key);
-		hashcode = hex_to_int(addr);
+		hashcode = hex_to_long(addr);
 	} else {
 		hashcode = hash(key);
 	}
@@ -245,4 +268,25 @@ hmiter* iterate(hashmap* hm, hmiter* iter) {
     iter->count += 1;
     
     return iter;
+}
+
+void print_hm(hashmap* hm) {
+
+    hmiter* iter = create_iter();
+
+    iter = iterate(hm, iter);
+
+    while (iter != NULL) {
+
+        hmnode* kvp = iter->kvp;
+
+        long* key = (long*)kvp->key;
+        long val = *(long*)kvp->value;
+
+        printf("%p - %lu\n", key, val);
+
+        iter = iterate(hm, iter);
+    }    
+
+
 }

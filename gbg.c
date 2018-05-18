@@ -33,11 +33,11 @@ void get_stackframe() {
     }
 }
 
-int long_comp(void* a, void* b) {
+int addr_comp(void* a, void* b) {
     return *(long*)a - *(long*)b;
 }
 
-void* my_malloc(void* value, hashmap* heap_contents) {
+void* my_malloc(void* value) {
 
     if (heap_contents == NULL || value == NULL) {
         return NULL;
@@ -47,16 +47,46 @@ void* my_malloc(void* value, hashmap* heap_contents) {
 
     long* address = mallocd;
 
-    put(heap_contents, address, mallocd, &long_comp, NULL);
+    put(heap_contents, address, mallocd, &addr_comp, NULL);
 
     return mallocd;
 }
 
+void init() {
+    heap_contents = create_hashmap();
+}
+
+void end() {
+    destroy_hashmap(heap_contents);
+}
+
 int main() {
     
-    
+    long x;
 
+    hashmap* hm = create_hashmap();
 
-    
+    long* ptr = my_malloc(&x);
+
+    print_hm(hm);
+
+    long* ptrb = my_malloc(&x);
+
+    print_hm(hm);
+
+    printf("ptr = %p\n", ptr);
+    printf("ptrb = %p\n", ptrb);
+
+    *ptr = 17;
+    *ptrb = 133;
+
+    printf("\nhashmap = \n");
+
+    print_hm(hm);
+
+    printf("\n");
+
+    get_stackframe();
+
     return 0;
 }

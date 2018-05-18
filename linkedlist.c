@@ -64,7 +64,7 @@ int contains(linkedlist* ll, void* key, int (*compare)(void*, void*)) {
 	hmnode* trav = ll->head;
 
 	while (trav != NULL) {
-		if (compare(&(trav->key), &key)) {
+		if (compare(trav->key, key)) {
 			return 1;
 		}
 		trav = trav->next;
