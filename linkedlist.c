@@ -2,44 +2,50 @@
 
 
 hmnode* create_node(void* key, void* value) {
-         hmnode* n = malloc(sizeof(hmnode));
-         if (n == NULL) {
-                 return NULL;
-         }
-	 n->key = key;
-         n->value = value;
-         n->next = NULL;
-         return n;
+    hmnode* n = malloc(sizeof(hmnode));
+
+    if (n == NULL) {
+         return NULL;
+    }
+
+    n->key = key;
+    n->value = value;
+    n->next = NULL;
+    return n;
 }
 
 void destroy_node(hmnode* n, int free_val) {
-	if (free_val) {
-        free(n->key);
-		free(n->value);
-	}
-	free(n);
+    if (free_val) {
+        if (n->key != NULL) {
+            free(n->key);
+        }
+        if (n->value != NULL) {
+            free(n->value);
+        }
+    }
+    free(n);
 }
 
 linkedlist* create_ll() {
-         linkedlist* ll = malloc(sizeof(linkedlist));
-         return ll;
+    linkedlist* ll = malloc(sizeof(linkedlist));
+    return ll;
 }
 
 void add_to_head(linkedlist* ll, void* key, void* value) {
 
-        if (ll == NULL || value == NULL) {
+        if (ll == NULL) {
               return;
         }
         hmnode* n = create_node(key, value);
         if (n == NULL) {
-                return;
+            return;
         }
         ll->head = n;
 }
 
 void add_to_tail(linkedlist* ll, void* key, void* value) {
 	
-	if (ll == NULL || value == NULL) {
+	if (ll == NULL) {
 		return;
 	}
 
@@ -64,7 +70,7 @@ int contains(linkedlist* ll, void* key, int (*compare)(void*, void*)) {
 	hmnode* trav = ll->head;
 
 	while (trav != NULL) {
-		if (compare(trav->key, key)) {
+		if (compare(trav->key, key) == 0) {
 			return 1;
 		}
 		trav = trav->next;
@@ -104,6 +110,12 @@ void destroy_list(linkedlist* ll, int free_val) {
 	}
 
 	hmnode* trav = ll->head;
+    if (trav == NULL) {
+        free(ll);
+        return;
+    }
+
+
 	hmnode* temp;
 
 	while (trav->next != NULL) {
@@ -114,10 +126,57 @@ void destroy_list(linkedlist* ll, int free_val) {
 	free(ll);
 }
 
+lliter* create_lliter() {
 
+    lliter* iter = malloc(sizeof(lliter));
 
+    if (iter != NULL) {
+        iter->current = NULL;
+        iter->has_next = 0;
+    }
 
+    return iter;
+}
 
+lliter* reset_iter(linkedlist* ll, lliter* iter) {
+    
+    if (iter == NULL || ll == NULL) {
+        return NULL;
+    }
 
+    iter->current = NULL;
+    iter->has_next = 0;
 
+    return iter;
+}
 
+lliter* ll_iterate(linkedlist* ll, lliter* iter) {
+
+    if (ll == NULL || iter == NULL) {
+        return NULL;
+    }
+
+    if (iter->current == NULL) {
+        iter->current = ll->head;
+        iter->has_next = 1;
+    } else {
+        iter->current = iter->current->next;
+    }
+    if (ll->head == NULL || iter->current->next == NULL) {
+        iter->has_next = 0;
+    }
+
+    return iter;
+}
+
+void print_ll(linkedlist* ll) {
+
+    lliter* iter = create_lliter();
+    iter = ll_iterate(ll, iter);
+
+    while (iter->has_next) {
+        hmnode* curr = iter->current;
+        printf("%lx\n", *(long*)(curr->key));
+        iter = ll_iterate(ll, iter);
+    }
+}

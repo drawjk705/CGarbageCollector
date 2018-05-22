@@ -4,6 +4,9 @@
 #include "linkedlist.h"
 #define LOAD_FACTOR 0.7
 
+/**
+ * hashmap struct definition
+ */
 typedef struct HashMap hashmap;
 struct HashMap {
 
@@ -13,13 +16,6 @@ struct HashMap {
 
 };
 
-typedef struct HM_Iter hmiter;
-struct HM_Iter
-{
-    int bucket;
-    int count;
-    hmnode* kvp;
-};
 
 hashmap* create_hashmap();
 
@@ -33,12 +29,27 @@ int contains_key(hashmap* hm, void* key, int (*compare)(void*, void*), int (*has
 
 int expand_hm(hashmap* hm, int (*hash)(void*));
 
-int hex_to_long(char* num);
+long hex_to_long(char* num);
 
 void* get_from_hm(hashmap* hm, void* key, int (*compare)(void*, void*), int (*hash)(void*));
+
+
+/**
+ * hashmap iterator struct definition
+ */
+typedef struct HM_Iter hmiter;
+struct HM_Iter
+{
+    int bucket;
+    int count;
+    int has_next;
+    hmnode* kvp;
+};
 
 hmiter* create_iter();
 
 hmiter* iterate(hashmap* hm, hmiter* iter);
+
+hmiter* reset_iter_hm(hashmap* hm, hmiter* iter);
 
 void print_hm(hashmap* hm);

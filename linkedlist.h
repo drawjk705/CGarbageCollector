@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <stdio.h>
 
 typedef struct HMNode hmnode;
 struct HMNode {
@@ -31,3 +32,17 @@ void add_to_tail(linkedlist* ll, void* key, void* value);
 int contains(linkedlist* ll, void* key, int (*compare)(void*, void*));
 void ll_remove(linkedlist* ll, void* key, int (*compare)(void*, void*));
 void destroy_list(linkedlist* ll, int free_val);
+void print_ll(linkedlist* ll);
+
+
+typedef struct LLIter lliter;
+struct LLIter {
+    hmnode* current;
+    int has_next;
+};
+
+lliter* create_lliter();
+
+lliter* ll_iterate(linkedlist* ll, lliter* iter);
+
+lliter* reset_iter(linkedlist* ll, lliter* iter);
