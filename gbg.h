@@ -6,6 +6,7 @@
 typedef struct Metadata meta;
 struct Metadata {
     // long addr;
+    void* ptr;
     int size;
     int marked;
 };
@@ -16,6 +17,8 @@ hashmap* heap_contents;
 void init();
 
 linkedlist* get_stackframe(int frame_backup);
+
+long addr_hash(void* addr);
 
 void* my_malloc(size_t size);
 

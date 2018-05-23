@@ -1,4 +1,5 @@
-#include "hashmap.h"
+// #include "hashmap.h"
+#include "gbg.h"
 
 /**
  * creates a hashmap struct
@@ -70,7 +71,7 @@ void destroy_hashmap(hashmap* hm) {
  * @param compare - function to compare keys
  * @param hash    - hash function; can be NULL if don't have one
  */
-void put(hashmap* hm, void* key, void* value, int (*compare)(void*, void*), int (*hash)(void*)) {
+void put(hashmap* hm, void* key, void* value, int (*compare)(void*, void*), long (*hash)(void*)) {
     
     // expand hashmap if necessary
     if ((double) hm->size / (double) hm->capacity > LOAD_FACTOR) {
@@ -124,7 +125,7 @@ void put(hashmap* hm, void* key, void* value, int (*compare)(void*, void*), int 
  * @param compare - comparison function pointer
  * @param hash    - hash function must be included if was used to insert
  */
-void remove_from_hm(hashmap* hm, void* key, int (*compare)(void*, void*), int (*hash)(void*)) {
+void remove_from_hm(hashmap* hm, void* key, int (*compare)(void*, void*), long (*hash)(void*)) {
     
     // get hashcode    
     int hashcode;
@@ -140,7 +141,7 @@ void remove_from_hm(hashmap* hm, void* key, int (*compare)(void*, void*), int (*
     int bucket = hashcode % hm->capacity;
 
     // remove key if it actually exists
-    if (!contains(hm->buckets[bucket], key, compare)) {
+    if (contains(hm->buckets[bucket], key, compare)) {
         ll_remove(hm->buckets[bucket], key, compare);
         hm->size--;
     }
@@ -153,7 +154,7 @@ void remove_from_hm(hashmap* hm, void* key, int (*compare)(void*, void*), int (*
  * @param compare - comparison function pointer
  * @param hash    - hash function; optional if didn't use to insert the kvp
  */
-int contains_key(hashmap* hm, void* key, int (*compare)(void*, void*), int (*hash)(void*)) {
+int contains_key(hashmap* hm, void* key, int (*compare)(void*, void*), long (*hash)(void*)) {
 
     // get hashcode
     int hashcode;
@@ -177,7 +178,7 @@ int contains_key(hashmap* hm, void* key, int (*compare)(void*, void*), int (*has
  * @param hm   - the hashmap
  * @param hash - hash function pointer; must use if used to for insertion
  */
-int expand_hm(hashmap* hm, int (*hash)(void*)) {
+int expand_hm(hashmap* hm, long (*hash)(void*)) {
 
     // new capacity
     int new_cap = (hm->capacity * 2) + 1;
@@ -288,13 +289,13 @@ long hex_to_long(char* num) {
  * @param compare - comparison function
  * @param hash    - hash function
  */
-void* get_from_hm(hashmap* hm, void* key, int (*compare)(void*, void*), int (*hash)(void*)) {
+void* get_from_hm(hashmap* hm, void* key, int (*compare)(void*, void*), long (*hash)(void*)) {
 
 	if (!contains_key(hm, key, compare, hash)) {
 		return NULL;
 	}
 
-	int hashcode;
+	long hashcode;
 
 	if (hash == NULL) {
 		char addr[20];
@@ -322,85 +323,78 @@ void* get_from_hm(hashmap* hm, void* key, int (*compare)(void*, void*), int (*ha
  * create hashmap iterator
  * @return hashmap iterator struct
  */
-hmiter* create_iter() {
+hmiter* create_iter(hashmap* hm) {
     hmiter* iter = malloc(sizeof(hmiter));
     
-    if (iter != NULL) {
+    if (iter != NULL || hm == NULL) {
         // set values
         iter->bucket = 0;
-        iter->kvp = NULL;
-        iter->count = 0;
-        iter->has_next = 1;
+        int i = 0;
+        while (i < hm->size && hm->buckets[i]->head == NULL) {
+            i++;
+        }
+        iter->kvp = hm->buckets[i]->head;
+        if (i < hm->size) {
+            iter->bucket_iter = create_lliter(hm->buckets[i]);
+        }
+        iter->hm = hm;
     }
 
     return iter;
-}
-
-hmiter* reset_iter_hm(hashmap* hm, hmiter* iter) {
-
-    iter->bucket = 0;
-    iter->kvp = NULL;
-    iter->count = 0;
-    iter->has_next = 1;
-
-    return iter;
-
 }
 
 /**
  * iterate over hashmap
  * @param  hm   the hashmap
  * @param  iter the iterator
- * @return      hashmap iterator at new position
  */
-hmiter* iterate(hashmap* hm, hmiter* iter) {
+void iterate(hmiter* iter) {
 
-    if (hm == NULL) {
-        return  NULL;
-    }
+    int size = iter->hm->capacity;
 
-    int bucket = iter->bucket;
-    int count = iter->count;
-    hmnode* kvp = iter->kvp;
+    while (1) {
 
-    if (count == hm->size) {
-        iter->has_next = 0;
-        return iter;
-    }
+        int bucket = iter->bucket;
 
-    if (kvp == NULL) {
-        while (kvp == NULL) {
-            kvp = hm->buckets[bucket++]->head;
+        lliter* b_iter = iter->bucket_iter;
+
+        if (bucket < size && b_iter == NULL) {
+            iter->bucket++;
         }
-    } else {
-        kvp = kvp->next;
-        while (kvp == NULL) {
-            kvp = hm->buckets[bucket++]->head;
+        else {
+            ll_iterate(b_iter);
+
+            if (iter->bucket_iter->current == NULL) {
+                iter->bucket++;
+                if (iter->bucket >= iter->hm->capacity) {
+                    iter->kvp = NULL;
+                    return;
+                }
+                free(b_iter);
+                lliter* b_iter = create_lliter(iter->hm->buckets[iter->bucket]);
+                iter->bucket_iter = b_iter;
+            } else {
+                iter->kvp = b_iter->current;
+                return;
+            }
         }
     }
-    iter->kvp = kvp;
-    iter->bucket = bucket;
-    iter->count += 1;
-    
-    return iter;
 }
 
 void print_hm(hashmap* hm) {
 
-    hmiter* iter = create_iter();
+    hmiter* iter = create_iter(hm);
 
-    iter = iterate(hm, iter);
-
-    while (iter->has_next) {
+    while (iter->kvp != NULL) {
 
         hmnode* kvp = iter->kvp;
 
         long* key = (long*)kvp->key;
-        long val = *(long*)kvp->value;
+        meta* val = (meta*)kvp->value;
 
-        printf("%p - %lu\n", key, val);
+        printf("0x%lx : size = %d; marked = %d\n", *key, val->size, val->marked);
 
-        iter = iterate(hm, iter);
+        iterate(iter);
     }    
 
 

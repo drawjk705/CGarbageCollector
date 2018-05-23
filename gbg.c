@@ -49,7 +49,7 @@ linkedlist* get_stackframe(int frame_backup) {
 }
 
 int addr_comp(void* a, void* b) {
-    return a - b;
+    return *(long*)a - *(long*)b;
 }
 
 void* my_malloc(size_t size) {
@@ -58,23 +58,36 @@ void* my_malloc(size_t size) {
         return NULL;
     }
 
-    printf("%lu\n", sizeof(size));
+    // printf("%lu\n", sizeof(size));
 
-    void* mallocd = malloc(sizeof(size));
+    void* mallocd = malloc(size);
+
+    long* address = malloc(sizeof(long));
+
+    char addr[20];
+
+    sprintf(addr, "%p", mallocd);
+
+    *address = hex_to_long(addr);
 
     meta* md = malloc(sizeof(meta));
 
     md->size = sizeof(size);
     md->marked = 0;
+    md->ptr = mallocd;
 
-    put(heap_contents, mallocd, md, &addr_comp, NULL);
+    put(heap_contents, address, md, &addr_comp, NULL);
 
     return mallocd;
 }
 
+long addr_hash(void* addr) {
+    return *(long*)addr;
+}
+
 
 int is_ptr(void* val) {
-    return contains_key(heap_contents, val, &addr_comp, NULL);
+    return contains_key(heap_contents, val, &addr_comp, &addr_hash);
 }
 
 void mark_contents(void* ptr) {
@@ -91,6 +104,8 @@ void mark_contents(void* ptr) {
     // mark
     md->marked = 1;
 
+    printf("marked %p\n", md->ptr);
+
     // get size
     int size = md->size;
 
@@ -99,10 +114,11 @@ void mark_contents(void* ptr) {
         size++;
     }
 
-    void* temp = ptr;
+    long* temp = malloc(sizeof(long));
+    *temp = *(long*)ptr;
 
     // go through each value contained by ptr
-    while (temp < ptr + size) {
+    while (*temp < *(long*)ptr + size) {
 
         // if the value is a ptr...
         if (is_ptr(temp)) {
@@ -111,18 +127,17 @@ void mark_contents(void* ptr) {
         }
 
         // increment temp
-        temp+= 8;
+        *temp+= 8;
     }
+    free(temp);
 
 }
 
 void pre_mark() {
 
-    hmiter* iter = create_iter();
+    hmiter* iter = create_iter(heap_contents);
 
-    iter = iterate(heap_contents, iter);
-
-    while (iter->has_next) {
+    while (iter->kvp != NULL) {
 
         hmnode* kvp = iter->kvp;
 
@@ -130,7 +145,7 @@ void pre_mark() {
 
         md->marked = 0;
 
-        iter = iterate(heap_contents, iter);
+        iterate(iter);
     }
 
     free(iter);
@@ -138,21 +153,25 @@ void pre_mark() {
 
 void discard_unmarked() {
 
-    hmiter* iter = create_iter();
+    hmiter* iter = create_iter(heap_contents);
 
-    iter = iterate(heap_contents, iter);
-
-    while (iter->has_next) {
+    while (iter->kvp != NULL) {
 
         hmnode* kvp = iter->kvp;
 
         meta* md = (meta*) kvp->value;
 
         if (md->marked == 0) {
-            remove_from_hm(heap_contents, kvp->key, &addr_comp, NULL);
+
+            printf("discarding %p\n", md->ptr);
+
+            free(md->ptr);
+
+            remove_from_hm(heap_contents, kvp->key, &addr_comp, &addr_hash);
+
         }
 
-        iter = iterate(heap_contents, iter);
+        iterate(iter);
     }
     free(iter);
 }
@@ -166,26 +185,29 @@ void collect_garbage() {
     // get this function's caller's stackframe
     linkedlist* stackframe = get_stackframe(2);
 
-    printf("\n\n\n");
+    // printf("\n\n\n");
 
-    print_ll(stackframe);
+    // print_ll(stackframe);
 
-    printf("\n\n\n");
+    // printf("\n\n\n");
 
-    lliter* iter = create_lliter();
+    lliter* iter = create_lliter(stackframe);
 
-    iter = ll_iterate(stackframe, iter);
 
-    while (iter->has_next) {
+    while (iter->current != NULL) {
 
-        void* key = iter->current->key;
+        hmnode* temp = (hmnode*)iter->current;
+
+        long* key = (long*)temp->key;
+
+        printf("%lx\n", *key);
 
         // set everything in the stackframe that's been malloc'd to 1
         if (is_ptr(key)) {
             mark_contents(key);
         }
 
-        iter = ll_iterate(stackframe, iter);
+        ll_iterate(iter);
     }
 
     discard_unmarked();
@@ -202,46 +224,58 @@ void end() {
     destroy_hashmap(heap_contents);
 }
 
-void fun() {
+void fun(linkedlist* ll) {
 
-    long* ptr = my_malloc(sizeof(long));
+    // create node
+    hmnode* n = my_malloc(sizeof(hmnode));
+
+    n->key = my_malloc(sizeof(int));
+    *(int*)n->key = 3;
+    n->value = my_malloc(sizeof(int));
+    *(int*)n->value = 4;
+    n->next = NULL;
+
+
+    if (ll->head == NULL) {
+        ll->head = n;
+    } else {
+        n->next = ll->head;
+        ll->head = n;
+    }
 
 }
 
 int main() {
 
     init();
-    
-    long* ptr = my_malloc(sizeof(long));
 
-    long* ptrb = my_malloc(sizeof(long));
 
-    fun();
+    linkedlist* ll = my_malloc(sizeof(linkedlist));
 
-    *ptr = 17;
-    *ptrb = 133;
+    fun(ll);
+
 
     printf("\nheap contents = \n");
 
     print_hm(heap_contents);
 
-    printf("\n");
+    // printf("\n");
     
-    printf("initial stackframe\n");
+    // printf("initial stackframe\n");
 
-    get_stackframe(1);
+    // get_stackframe(1);
 
-    printf("\n");
+    // printf("\n");
 
     printf("collecting garbage\n");
 
     collect_garbage();
 
-    printf("\n");
+    // printf("\n");
 
-    printf("new stackframe\n");
+    // printf("new stackframe\n");
 
-    get_stackframe(1);
+    // get_stackframe(1);
 
     printf("\nheap contents = \n");
 

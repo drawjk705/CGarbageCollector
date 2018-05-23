@@ -41,8 +41,6 @@ struct LLIter {
     int has_next;
 };
 
-lliter* create_lliter();
+lliter* create_lliter(linkedlist* ll);
 
-lliter* ll_iterate(linkedlist* ll, lliter* iter);
-
-lliter* reset_iter(linkedlist* ll, lliter* iter);
+void ll_iterate(lliter* iter);
