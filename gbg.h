@@ -28,7 +28,7 @@ void collect_garbage();
 
 void pre_mark();
 
-void mark_contents(void* ptr);
+void mark_contents(void* addr);
 
 void discard_unmarked();
 

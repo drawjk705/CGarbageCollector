@@ -76,7 +76,7 @@ void* my_malloc(size_t size) {
     md->marked = 0;
     md->ptr = mallocd;
 
-    put(heap_contents, address, md, &addr_comp, NULL);
+    put(heap_contents, address, md, &addr_comp, &addr_hash);
 
     return mallocd;
 }
@@ -90,11 +90,17 @@ int is_ptr(void* val) {
     return contains_key(heap_contents, val, &addr_comp, &addr_hash);
 }
 
-void mark_contents(void* ptr) {
+void mark_contents(void* addr) {
 
     // get ptr metadata from heap_contents
     
-    meta* md = (meta*)get_from_hm(heap_contents, ptr, &addr_comp, NULL);
+    meta* md = (meta*)get_from_hm(heap_contents, addr, &addr_comp, &addr_hash);
+
+    void* ptr = md->ptr;
+
+
+    printf("ADDRESS = 0x%lx\n", *(long*)addr);
+    printf("POINTER = %p\n", ptr);
 
     // base case
     if (md->marked == 1) {
@@ -115,15 +121,15 @@ void mark_contents(void* ptr) {
     }
 
     long* temp = malloc(sizeof(long));
-    *temp = *(long*)ptr;
+    *temp = *(long*)addr;
 
     // go through each value contained by ptr
-    while (*temp < *(long*)ptr + size) {
+    while (*temp < *(long*)addr + size) {
 
         // if the value is a ptr...
-        if (is_ptr(temp)) {
+        if (is_ptr((void*)temp)) {
             // mark that ptr's contents
-            mark_contents(temp);
+            mark_contents((void*)temp);
         }
 
         // increment temp

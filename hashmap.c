@@ -16,7 +16,7 @@ hashmap* create_hashmap() {
     }
 
     // set default/initial values
-    hm->capacity = 16;
+    hm->capacity = 17;
     hm->size = 0;
     hm->buckets = malloc(sizeof(linkedlist*) * hm->capacity);
     if (hm->buckets == NULL) {
@@ -311,7 +311,7 @@ void* get_from_hm(hashmap* hm, void* key, int (*compare)(void*, void*), long (*h
 	hmnode* trav = ll->head;
 
 	while (trav != NULL) {
-		if (compare(trav->key, key)) {
+		if (compare(trav->key, key) == 0) {
 			return trav->value;
 		}
 		trav = trav->next;
@@ -325,17 +325,23 @@ void* get_from_hm(hashmap* hm, void* key, int (*compare)(void*, void*), long (*h
  */
 hmiter* create_iter(hashmap* hm) {
     hmiter* iter = malloc(sizeof(hmiter));
+
+    iter->bucket = -1;
+    iter->bucket_iter = NULL;
+    iter->kvp = NULL;
+    iter->hm = hm;
     
     if (iter != NULL || hm == NULL) {
         // set values
         iter->bucket = 0;
         int i = 0;
-        while (i < hm->size && hm->buckets[i]->head == NULL) {
+        while (i < hm->capacity && hm->buckets[i]->head == NULL) {
             i++;
         }
-        iter->kvp = hm->buckets[i]->head;
-        if (i < hm->size) {
+        if (i < hm->capacity) {
             iter->bucket_iter = create_lliter(hm->buckets[i]);
+            iter->bucket = i;
+            iter->kvp = iter->bucket_iter->current;
         }
         iter->hm = hm;
     }
@@ -350,35 +356,48 @@ hmiter* create_iter(hashmap* hm) {
  */
 void iterate(hmiter* iter) {
 
-    int size = iter->hm->capacity;
+    // store contents of iterator locally
+    int capacity = iter->hm->capacity;
+    int bucket = iter->bucket;
+    lliter* b_iter = iter->bucket_iter;
 
-    while (1) {
+    int current_bucket = 1;
 
-        int bucket = iter->bucket;
+    while (bucket < capacity) {
 
-        lliter* b_iter = iter->bucket_iter;
-
-        if (bucket < size && b_iter == NULL) {
-            iter->bucket++;
-        }
-        else {
+        // iterate only if haven't changed buckets
+        if (current_bucket) {
             ll_iterate(b_iter);
+        }
 
-            if (iter->bucket_iter->current == NULL) {
-                iter->bucket++;
-                if (iter->bucket >= iter->hm->capacity) {
-                    iter->kvp = NULL;
-                    return;
-                }
-                free(b_iter);
-                lliter* b_iter = create_lliter(iter->hm->buckets[iter->bucket]);
-                iter->bucket_iter = b_iter;
-            } else {
-                iter->kvp = b_iter->current;
-                return;
+        // if current item that's being iterated on
+        // is null
+        if (b_iter->current == NULL) {
+            
+            // increment bucket
+            bucket++;
+
+            // free() current iterator and create new one
+            free(b_iter);
+            if (bucket < capacity) {
+                b_iter = create_lliter(iter->hm->buckets[bucket]);
             }
+
+            // set flag
+            current_bucket = 0;
+        } else {
+            // store data and return
+            iter->bucket = bucket;
+            iter->bucket_iter = b_iter;
+            iter->kvp = b_iter->current;
+            return;
         }
     }
+    
+    // store data, as well
+    iter->bucket = bucket;
+    iter->bucket_iter = b_iter;
+    iter->kvp = b_iter->current;
 }
 
 void print_hm(hashmap* hm) {
