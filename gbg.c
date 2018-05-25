@@ -72,7 +72,7 @@ void* my_malloc(size_t size) {
 
     meta* md = malloc(sizeof(meta));
 
-    md->size = sizeof(size);
+    md->size = size;
     md->marked = 0;
     md->ptr = mallocd;
 
@@ -96,12 +96,6 @@ void mark_contents(void* addr) {
     
     meta* md = (meta*)get_from_hm(heap_contents, addr, &addr_comp, &addr_hash);
 
-    void* ptr = md->ptr;
-
-
-    printf("ADDRESS = 0x%lx\n", *(long*)addr);
-    printf("POINTER = %p\n", ptr);
-
     // base case
     if (md->marked == 1) {
         return;
@@ -120,23 +114,18 @@ void mark_contents(void* addr) {
         size++;
     }
 
-    long* temp = malloc(sizeof(long));
-    *temp = *(long*)addr;
+    long temp = *(long*)addr;
+
+    printf("\n\n\n");
 
     // go through each value contained by ptr
-    while (*temp < *(long*)addr + size) {
+    for (int i = 0; i < size; i += 8) {
+        printf("0x%lx: 0x%lx\n", temp + i, *(long*)(void*)(temp + i));
 
-        // if the value is a ptr...
-        if (is_ptr((void*)temp)) {
-            // mark that ptr's contents
-            mark_contents((void*)temp);
+        if (is_ptr((void*)(temp + i))) {
+            mark_contents((void*)(temp + i));
         }
-
-        // increment temp
-        *temp+= 8;
     }
-    free(temp);
-
 }
 
 void pre_mark() {
@@ -249,6 +238,16 @@ void fun(linkedlist* ll) {
         ll->head = n;
     }
 
+    // char addr[10];
+
+    // sprintf(addr, "%p", n);
+    // long x = hex_to_long(addr);
+
+    // printf("node at: %p\n", n);
+    // for (int i = 0; i < sizeof(hmnode); i++) {
+    //     printf("0x%lx: 0x%lx\n", x + i, *(long*)(void*)(x + i));
+    // }
+
 }
 
 int main() {
@@ -284,6 +283,8 @@ int main() {
     // get_stackframe(1);
 
     printf("\nheap contents = \n");
+
+    printf("%d\n", heap_contents->size);
 
     print_hm(heap_contents);
 

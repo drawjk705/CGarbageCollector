@@ -7,7 +7,7 @@ typedef struct Metadata meta;
 struct Metadata {
     // long addr;
     void* ptr;
-    int size;
+    size_t size;
     int marked;
 };
 

@@ -378,8 +378,8 @@ void iterate(hmiter* iter) {
             bucket++;
 
             // free() current iterator and create new one
-            free(b_iter);
             if (bucket < capacity) {
+                free(b_iter);
                 b_iter = create_lliter(iter->hm->buckets[bucket]);
             }
 
@@ -411,7 +411,7 @@ void print_hm(hashmap* hm) {
         long* key = (long*)kvp->key;
         meta* val = (meta*)kvp->value;
 
-        printf("0x%lx : size = %d; marked = %d\n", *key, val->size, val->marked);
+        printf("0x%lx : size = %zu; marked = %d\n", *key, val->size, val->marked);
 
         iterate(iter);
     }    
