@@ -377,8 +377,8 @@ void iterate(hmiter* iter) {
             // increment bucket
             bucket++;
 
-            // free() current iterator and create new one
             if (bucket < capacity) {
+                // free() current iterator and create new one
                 free(b_iter);
                 b_iter = create_lliter(iter->hm->buckets[bucket]);
             }
