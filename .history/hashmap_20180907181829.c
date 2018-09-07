@@ -42,7 +42,7 @@ hashmap* create_hashmap() {
 }
 
 /**
- * destroys the hashmap by free()-ing everything
+ * destroys the hashmap by free-ing everything
  * @param hm the hashmap to destroy
  */
 void destroy_hashmap(hashmap* hm) {
@@ -350,12 +350,6 @@ hmiter* create_iter(hashmap* hm) {
 }
 
 void destroy_iter(hmiter* iter) {
-    if (iter == NULL) {
-        return;
-    }
-    if (iter->bucket_iter != NULL) {
-        free(iter->bucket_iter);
-    }
     free(iter);
 }
 

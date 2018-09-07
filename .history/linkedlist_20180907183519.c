@@ -14,18 +14,13 @@ hmnode* create_node(void* key, void* value) {
     return n;
 }
 
-void destroy_node(
-	hmnode* n,
-	int free_contents,
-	void (*key_destructor)(void*),
-	void (*val_destructor)(void*)
-) {
+void destroy_node(hmnode* n, int free_contents, void (*key_destructor)(void*), void(*val_destructor)(void*)) {
     if (free_contents) {
         if (n->key != NULL) {
 			(key_destructor == NULL) ? free(n->key) : key_destructor(n->key);
         }
         if (n->value != NULL) {
-            (val_destructor == NULL) ? free(n->value) : val_destructor(n->value);
+            (val_destructor == NULL) ? free(n->value) : key_destructor(n->value);
         }
     }
     free(n);
@@ -70,12 +65,8 @@ void add_to_tail(linkedlist* ll, void* key, void* value) {
 
 int contains(linkedlist* ll, void* key, int (*compare)(void*, void*)) {
 
-	if (ll == NULL) {
+	if (ll == NULL || compare == NULL) {
 		return 0;
-	}
-	if (compare == NULL) {
-		perror("compare() function cannot be NULL");
-		return -1;
 	}
 
 	hmnode* trav = ll->head;
@@ -90,13 +81,7 @@ int contains(linkedlist* ll, void* key, int (*compare)(void*, void*)) {
 	return 0;
 }
 
-void ll_remove(
-	linkedlist* ll,
-	void* key,
-	int (*compare)(void*, void*),
-	void (*key_destructor)(void*),
-	void (*val_destructor)(void*)
-) {
+void ll_remove(linkedlist* ll, void* key, int (*compare)(void*, void*)) {
 
 	if (ll == NULL) {
 		return;
@@ -106,13 +91,13 @@ void ll_remove(
 	hmnode* prev;
 
 	while (trav != NULL) {
-		if (compare(trav->key, key)) {
+		if (compare(&(trav->key), &key)) {
 			if (trav == ll->head) {
 				ll->head = trav->next;
 			} else {
 				prev->next = trav->next;
 			}
-			destroy_node(trav, 1, key_destructor, val_destructor);
+			destroy_node(trav, 1);
 			return;
 		}
 		prev = trav;
@@ -120,12 +105,7 @@ void ll_remove(
 	}
 }
 
-void destroy_list(
-	linkedlist* ll,
-	int free_val,
-	void (*key_destructor)(void*),
-	void (*val_destructor)(void*)
-) {
+void destroy_list(linkedlist* ll, int free_val) {
 
 	if (ll == NULL) {
 		return;
@@ -142,7 +122,7 @@ void destroy_list(
 
 	while (trav->next != NULL) {
 		temp = trav->next;
-		destroy_node(trav, free_val, key_destructor, val_destructor);
+		destroy_node(trav, free_val);
 		trav = temp;
 	}
 	free(ll);

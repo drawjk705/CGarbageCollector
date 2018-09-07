@@ -12,8 +12,8 @@ struct HMNode {
 hmnode* create_node(void* key, void* value);
 
 // hmnode destructor
-// with 'optional' destructors for the node's key and value
-void destroy_node(hmnode* n, int free_contents, void (*key_destructor)(void*), void (*val_destructor)(void*));
+// with 'optional' destructor for the actual 
+void destroy_node(hmnode* n, int free_val, void (*node_destructor)(void*));
 
 typedef struct LinkedList linkedlist;
 struct LinkedList {

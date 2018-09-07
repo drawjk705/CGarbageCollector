@@ -9,7 +9,7 @@
 
 /**
  * gets stackframe for function that is n
- * frames back
+ * frames beack
  * @param  frame_backup number of frames to look back
  * @return              linkedlist* of the stackframe
  */

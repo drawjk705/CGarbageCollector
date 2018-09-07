@@ -8,12 +8,17 @@ struct HMNode {
 	hmnode* next;
 };
 
-// hmnode constructor
+/*
+typedef struct Node node;
+struct Node {
+	void* value;
+	node* next;
+};
+*/
+
 hmnode* create_node(void* key, void* value);
 
-// hmnode destructor
-// with 'optional' destructors for the node's key and value
-void destroy_node(hmnode* n, int free_contents, void (*key_destructor)(void*), void (*val_destructor)(void*));
+void destroy_node(hmnode* n, int free_val void (*destructor)(void*));
 
 typedef struct LinkedList linkedlist;
 struct LinkedList {
@@ -26,7 +31,7 @@ void add_to_head(linkedlist* ll, void* key, void* value);
 void add_to_tail(linkedlist* ll, void* key, void* value);
 int contains(linkedlist* ll, void* key, int (*compare)(void*, void*));
 void ll_remove(linkedlist* ll, void* key, int (*compare)(void*, void*));
-void destroy_list(linkedlist* ll, int free_val, void (*node_destructor)(void*));
+void destroy_list(linkedlist* ll, int free_val);
 void print_ll(linkedlist* ll);
 
 

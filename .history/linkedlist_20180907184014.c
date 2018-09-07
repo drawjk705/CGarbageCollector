@@ -120,12 +120,7 @@ void ll_remove(
 	}
 }
 
-void destroy_list(
-	linkedlist* ll,
-	int free_val,
-	void (*key_destructor)(void*),
-	void (*val_destructor)(void*)
-) {
+void destroy_list(linkedlist* ll, int free_val) {
 
 	if (ll == NULL) {
 		return;
@@ -142,7 +137,7 @@ void destroy_list(
 
 	while (trav->next != NULL) {
 		temp = trav->next;
-		destroy_node(trav, free_val, key_destructor, val_destructor);
+		destroy_node(trav, free_val);
 		trav = temp;
 	}
 	free(ll);

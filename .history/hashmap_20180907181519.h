@@ -34,11 +34,8 @@ int contains_key(hashmap* hm, void* key, int (*compare)(void*, void*), long (*ha
 // "private" function for maintenance
 int expand_hm(hashmap* hm, long (*hash)(void*));
 
-// convert hex representation of number
-// (as a string) to long
 long hex_to_long(char* num);
 
-// return value from key
 void* get_from_hm(hashmap* hm, void* key, int (*compare)(void*, void*), long(*hash)(void*));
 
 
@@ -55,8 +52,6 @@ struct HM_Iter
 };
 
 hmiter* create_iter(hashmap* hm);
-
-void destroy_iter(hmiter* iter);
 
 void iterate(hmiter* iter);
 

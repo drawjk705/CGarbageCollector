@@ -56,7 +56,7 @@ struct HM_Iter
 
 hmiter* create_iter(hashmap* hm);
 
-void destroy_iter(hmiter* iter);
+void destroy_iter
 
 void iterate(hmiter* iter);
 

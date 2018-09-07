@@ -142,7 +142,7 @@ void destroy_list(
 
 	while (trav->next != NULL) {
 		temp = trav->next;
-		destroy_node(trav, free_val, key_destructor, val_destructor);
+		destroy_node(trav, free_val);
 		trav = temp;
 	}
 	free(ll);

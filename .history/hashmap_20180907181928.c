@@ -42,7 +42,7 @@ hashmap* create_hashmap() {
 }
 
 /**
- * destroys the hashmap by free()-ing everything
+ * destroys the hashmap by free-ing everything
  * @param hm the hashmap to destroy
  */
 void destroy_hashmap(hashmap* hm) {
